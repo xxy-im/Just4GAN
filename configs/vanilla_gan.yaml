@@ -1,0 +1,20 @@
+# dataset config
+data_dir: './data/cifar-10'
+filename: ''
+dataset: 'cifar10'
+dataset_download: True
+epochs: 500
+batch_size: 512
+device: 'cuda:0'
+ckpt_dir: './weights'
+inference_ckpt: './weights/G-checkpoint-000epoch.pth'
+out_dir: './output'
+
+# Model parameters
+model: 'gan'
+in_feat: 128
+img_shape: [3, 32, 32]
+kstep: 4
+resume: False
+resume_ckpt:
+lr: 0.002
