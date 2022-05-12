@@ -52,13 +52,13 @@ def main():
 
     device = torch.device(config.device)
     generator, discriminator = create_model(config.model)
-    G = generator(config.in_feat, config.img_shape, init_weights=False)
-    D = discriminator(config.img_shape, init_weights=False)
+    G = generator(config.in_feat, config.img_shape, init_weights=True)
+    D = discriminator(config.img_shape, init_weights=True)
     G.to(device)
     D.to(device)
 
-    optim_G = torch.optim.Adam(G.parameters(), lr=config.lr, betas=(0.5, 0.999))
-    optim_D = torch.optim.Adam(D.parameters(), lr=config.lr, betas=(0.5, 0.999))
+    optim_G = torch.optim.Adam(G.parameters(), lr=config.lr, betas=(config.b1, config.b2))
+    optim_D = torch.optim.Adam(D.parameters(), lr=config.lr, betas=(config.b1, config.b2))
 
     loss_fn = torch.nn.BCELoss()
 
@@ -95,7 +95,7 @@ def train_one_epoch(config, epoch, G, D, optim_G, optim_D, train_loader, loss_fn
     for i, (images, _) in enumerate(pbar):
         images = images.to(device)
         bs = images.shape[0]
-        z = torch.randn((bs, 128), device=device)
+        z = torch.randn((bs, config.in_feat), device=device)
         gz = G(z)
         real = torch.ones((bs, 1), device=device)
         fake = torch.zeros((bs, 1), device=device)

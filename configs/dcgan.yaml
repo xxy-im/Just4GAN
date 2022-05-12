@@ -1,0 +1,23 @@
+# dataset config
+data_dir: './data/cifar-10'
+filename: ''
+dataset: 'cifar10'
+dataset_download: True
+epochs: 500
+batch_size: 128
+device: 'cuda:0'
+ckpt_dir: './weights'
+inference_ckpt: './weights/G-checkpoint-000epoch.pth'
+out_dir: './output'
+
+# Model parameters
+model: 'dcgan'
+in_feat: 100
+# the input size of first conv2d
+img_shape: [1024, 4, 4]
+kstep: 1
+resume: False
+resume_ckpt:
+lr: 0.0002
+b1: 0.5
+b2: 0.999
