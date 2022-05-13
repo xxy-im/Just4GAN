@@ -18,3 +18,5 @@ kstep: 4
 resume: False
 resume_ckpt:
 lr: 0.002
+b1: 0.5
+b2: 0.999

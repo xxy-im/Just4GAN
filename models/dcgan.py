@@ -2,16 +2,21 @@ import numpy as np
 import torch.nn as nn
 
 
+def weights_init(m):
+    classname = m.__class__.__name__
+    if classname.find('Conv') != -1:
+        m.weight.data.normal_(0.0, 0.02)
+    elif classname.find('BatchNorm') != -1:
+        m.weight.data.normal_(1.0, 0.02)
+        m.bias.data.fill_(0)
+
 # 生成器
 class DCGenerator(nn.Module):
     def __init__(self, in_features, img_shape, init_weights=True):
         super().__init__()
         self.img_shape = img_shape
 
-        # 因为默认在CIFAR10上训练，且默认第一个卷积层输入是3*4*4
-        # 在每次上采样放大两倍宽高的情况下，只需要做3次上采样便得到了所需的图片大小
-        # 所以这里我比原论文少了一层上采样，原论文目标图片宽高是64的
-        conv_channels = [1024, 512, 256, 3]
+        conv_channels = [1024, 512, 256, 128, 3]
 
         # 默认每次放大2倍宽高，用于上采样
         def upsampling_block(in_channel, out_channel, normalize=True, activation=None, kernel_size=4, stride=2, padding=1):
@@ -31,14 +36,15 @@ class DCGenerator(nn.Module):
         self.net = nn.Sequential(
             *upsampling_block(conv_channels[0], conv_channels[1]),      # 8 * 8
             *upsampling_block(conv_channels[1], conv_channels[2]),      # 16 * 16
-            *upsampling_block(conv_channels[2], conv_channels[3], False, nn.Tanh())     # 32 * 32
+            *upsampling_block(conv_channels[2], conv_channels[3]),      # 32 * 32
+            *upsampling_block(conv_channels[3], conv_channels[4], False, nn.Tanh())     # 64 * 64
         )
 
         if init_weights:
             for m in self.modules():
                 if isinstance(m, nn.Conv2d):
                     nn.init.normal_(m.weight, mean=0, std=0.02)
-                elif isinstance(m, nn.BatchNorm2d):
+                if isinstance(m, nn.BatchNorm2d):
                     nn.init.normal_(m.weight, mean=1, std=0.02)
                     if m.bias is not None:
                         nn.init.constant_(m.bias, 0)
@@ -54,7 +60,7 @@ class DCDiscriminator(nn.Module):
     def __init__(self, img_shape, init_weights=True):
         super().__init__()
 
-        conv_channels = [3, 256, 512, 1024, 1]
+        conv_channels = [3, 128, 256, 512, 1024, 1]
 
         # 默认每次缩小2倍宽高，用于下采样
         def downsampling_block(in_channel, out_channel, normalize=True, activation=None, padding=1):
@@ -65,10 +71,11 @@ class DCDiscriminator(nn.Module):
             return layers
 
         self.net = nn.Sequential(
-            *downsampling_block(conv_channels[0], conv_channels[1], False),     # 16 * 16
-            *downsampling_block(conv_channels[1], conv_channels[2]),            # 8 * 8
-            *downsampling_block(conv_channels[2], conv_channels[3]),            # 4 * 4
-            *downsampling_block(conv_channels[3], conv_channels[4], activation=nn.Sigmoid(), padding=0),
+            *downsampling_block(conv_channels[0], conv_channels[1], False),     # 32 * 32
+            *downsampling_block(conv_channels[1], conv_channels[2]),            # 16 * 16
+            *downsampling_block(conv_channels[2], conv_channels[3]),            # 8 * 8
+            *downsampling_block(conv_channels[3], conv_channels[4]),            # 4 * 4
+            *downsampling_block(conv_channels[4], conv_channels[5], False, activation=nn.Sigmoid(), padding=0),
             #nn.AdaptiveAvgPool2d((1, 1)), nn.Sigmoid()
         )
 
@@ -76,7 +83,7 @@ class DCDiscriminator(nn.Module):
             for m in self.modules():
                 if isinstance(m, nn.Conv2d):
                     nn.init.normal_(m.weight, mean=0, std=0.02)
-                elif isinstance(m, nn.BatchNorm2d):
+                if isinstance(m, nn.BatchNorm2d):
                     nn.init.normal_(m.weight, mean=1, std=0.02)
                     if m.bias is not None:
                         nn.init.constant_(m.bias, 0)

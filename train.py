@@ -1,8 +1,10 @@
 import yaml
 import argparse
+import random
 
 from utils import create_dataset, create_model
 
+import numpy as np
 import torch
 from torch.utils import data
 from torchvision import transforms
@@ -52,8 +54,8 @@ def main():
 
     device = torch.device(config.device)
     generator, discriminator = create_model(config.model)
-    G = generator(config.in_feat, config.img_shape, init_weights=True)
-    D = discriminator(config.img_shape, init_weights=True)
+    G = generator(config.in_feat, config.img_shape, init_weights=False)
+    D = discriminator(config.img_shape, init_weights=False)
     G.to(device)
     D.to(device)
 
@@ -62,12 +64,15 @@ def main():
 
     loss_fn = torch.nn.BCELoss()
 
-    transform = transforms.Compose(
-        [
+    transform = [
+            # transforms.ToPILImage(),
             transforms.ToTensor(),
             transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
         ]
-    )
+    if config.model == 'dcgan':
+        transform.insert(0, transforms.Resize((64, 64)))
+
+    transform = transforms.Compose(transform)
     train_data = create_dataset(config.dataset, config.data_dir, download=config.dataset_download, transform=transform)
     train_loader = data.DataLoader(train_data, batch_size=config.batch_size, shuffle=True)
 
@@ -92,16 +97,18 @@ def train_one_epoch(config, epoch, G, D, optim_G, optim_D, train_loader, loss_fn
 
     pbar = tqdm(train_loader)
     pbar.set_description(desc=f'Epoch {epoch + 1}/{config.epochs}')
+
+    # cifar-10是带标注的，所有加了个 _ 丢弃标注
     for i, (images, _) in enumerate(pbar):
-        images = images.to(device)
-        bs = images.shape[0]
+        r_images = images.to(device)
+        bs = r_images.shape[0]
         z = torch.randn((bs, config.in_feat), device=device)
-        gz = G(z)
+        f_images = G(z)
         real = torch.ones((bs, 1), device=device)
         fake = torch.zeros((bs, 1), device=device)
 
-        r_loss = loss_fn(D(images), real)  # 识别真实图片的loss
-        f_loss = loss_fn(D(gz), fake)  # 识别假图片的loss
+        r_loss = loss_fn(D(r_images.detach()), real)  # 识别真实图片的loss
+        f_loss = loss_fn(D(f_images.detach()), fake)  # 识别假图片的loss
         D_loss = (r_loss + f_loss) / 2  # 取平均
 
         D.zero_grad()
@@ -110,7 +117,7 @@ def train_one_epoch(config, epoch, G, D, optim_G, optim_D, train_loader, loss_fn
 
         # 训练k次D后训练G
         if i % k == 0:
-            G_loss = loss_fn(D(G(z)), real)
+            G_loss = loss_fn(D(f_images), real)
             G.zero_grad()
             G_loss.backward()
             optim_G.step()
@@ -119,5 +126,20 @@ def train_one_epoch(config, epoch, G, D, optim_G, optim_D, train_loader, loss_fn
             {'D Loss': '{:.5f}'.format(round(D_loss.item(), 4)), 'G Loss': '{:.5f}'.format(round(G_loss.item(), 4))})
 
 
+def same_seeds(seed):
+    # Python built-in random module
+    random.seed(seed)
+    # Numpy
+    np.random.seed(seed)
+    # Torch
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = True
+
+
 if __name__ == '__main__':
+    same_seeds(42)      # 宇宙的答案 42
     main()
