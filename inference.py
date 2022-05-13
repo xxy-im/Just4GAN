@@ -14,7 +14,7 @@ parser.add_argument('-c', '--config', default='', type=str, metavar='FILE',
 
 parser.add_argument("--device", type=str, help="your cuda device", default='cuda:0')
 
-parser.add_argument('--ckpt', type=str, metavar='checkpoint', help='path to checkpoint')
+parser.add_argument('--inference_ckpt', type=str, metavar='CHECKPOINT', help='path to checkpoint')
 
 parser.add_argument('--in-feat', type=int, default=128, metavar='N',
                     help='The length of random noise (default: 128)')
