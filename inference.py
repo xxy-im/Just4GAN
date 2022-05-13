@@ -12,24 +12,15 @@ config_parser = parser = argparse.ArgumentParser(description='Training Config', 
 parser.add_argument('-c', '--config', default='', type=str, metavar='FILE',
                     help='YAML config file specifying default arguments')
 
-parser.add_argument("--epochs", type=int, help="training epochs", default=100)
-parser.add_argument("--batch_size", type=int, help="data batch size", default=128)
 parser.add_argument("--device", type=str, help="your cuda device", default='cuda:0')
 
-# dataset config
-parser.add_argument('--data_dir', metavar='DIR', help='path to dataset')
-parser.add_argument('--dataset', '-d', metavar='NAME', default='',
-                    help='dataset type (default: cifar10 if empty)')
-parser.add_argument('--dataset-download', action='store_true', default=False,
-                    help='Allow download of dataset for CIFAR100, CIFAR10, MNIST, FashionMNIST.')
+parser.add_argument('--ckpt', type=str, metavar='checkpoint', help='path to checkpoint')
 
-# Model parameters
-parser.add_argument('--model', default='gan', type=str, metavar='MODEL', help='default: "vanilla-gan"')
-parser.add_argument('--resume', default='', type=str, metavar='PATH',
-                    help='Resume full model and optimizer state from checkpoint (default: none)')
 parser.add_argument('--in-feat', type=int, default=128, metavar='N',
                     help='The length of random noise (default: 128)')
-parser.add_argument('--lr', type=float, default=0.05, metavar='LR', help='learning rate (default: 0.05)')
+
+parser.add_argument('--n-output', type=int, default=1000, metavar='N',
+                    help='The nums of output images (default: 1000)')
 
 
 def _parse_args():
@@ -54,8 +45,7 @@ def main():
     G.eval()
 
     # 默认输出1000张照片到out_dir/result.jpg
-    n_output = 1000
-    z_sample = torch.randn((n_output, config.in_feat), device=device)
+    z_sample = torch.randn((config.n_output, config.in_feat), device=device)
     imgs_sample = (G(z_sample).data + 1) / 2.0
     filename = os.path.join(config.out_dir, 'result.jpg')
     torchvision.utils.save_image(imgs_sample, filename, nrow=10)
