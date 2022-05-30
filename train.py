@@ -2,7 +2,8 @@ import yaml
 import argparse
 import random
 
-from utils import create_dataset, create_model
+import models
+from utils import create_dataset
 
 import numpy as np
 import torch
@@ -53,7 +54,7 @@ def main():
     weights_folder = config.ckpt_dir
 
     device = torch.device(config.device)
-    generator, discriminator = create_model(config.model)
+    generator, discriminator = models.create_model(config.model)
     G = generator(config.in_feat, config.img_shape, init_weights=False)
     D = discriminator(config.img_shape, init_weights=False)
     G.to(device)

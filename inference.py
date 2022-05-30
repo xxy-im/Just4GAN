@@ -2,7 +2,7 @@ import os
 import yaml
 import argparse
 
-from utils import  create_model
+import models
 
 import torch
 import torchvision
@@ -38,7 +38,7 @@ def main():
 
     device = torch.device(config.device)
 
-    generator, _ = create_model(config.model)
+    generator, _ = models.create_model(config.model)
     G = generator(config.in_feat, config.img_shape, False)
     G.load_state_dict(torch.load(config.inference_ckpt))
     G.to(device)
