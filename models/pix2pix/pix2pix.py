@@ -29,7 +29,7 @@ class UNetGenerator(nn.Module):
 
         conv_channels = [64, 128, 256, 512, 512, 512, 512, 512, 512]
 
-        self.down1 = UNetBlock(in_channels, conv_channels[0], down=True)
+        self.down1 = UNetBlock(in_channels, conv_channels[0], normalize=False, down=True)
         self.down2 = UNetBlock(conv_channels[0], conv_channels[1], down=True)
         self.down3 = UNetBlock(conv_channels[1], conv_channels[2], down=True)
         self.down4 = UNetBlock(conv_channels[2], conv_channels[3], down=True)
@@ -39,12 +39,12 @@ class UNetGenerator(nn.Module):
 
         self.bottleneck = UNetBlock(conv_channels[6], conv_channels[7], normalize=False, down=True)
 
-        self.up1 = UNetBlock(conv_channels[7], conv_channels[6], down=False, activation=nn.ReLU(True))
-        self.up2 = UNetBlock(conv_channels[6] * 2, conv_channels[5], down=False, activation=nn.ReLU(True), dropout=True)
-        self.up3 = UNetBlock(conv_channels[5] * 2, conv_channels[4], down=False, activation=nn.ReLU(True))
-        self.up4 = UNetBlock(conv_channels[4] * 2, conv_channels[3], down=False, activation=nn.ReLU(True), dropout=True)
-        self.up5 = UNetBlock(conv_channels[3] * 2, conv_channels[2], down=False, activation=nn.ReLU(True))
-        self.up6 = UNetBlock(conv_channels[2] * 2, conv_channels[1], down=False, activation=nn.ReLU(True), dropout=True)
+        self.up1 = UNetBlock(conv_channels[7], conv_channels[6], down=False, activation=nn.ReLU(True), dropout=True)
+        self.up2 = UNetBlock(conv_channels[6] * 2, conv_channels[5], down=False, activation=nn.ReLU(True))
+        self.up3 = UNetBlock(conv_channels[5] * 2, conv_channels[4], down=False, activation=nn.ReLU(True), dropout=True)
+        self.up4 = UNetBlock(conv_channels[4] * 2, conv_channels[3], down=False, activation=nn.ReLU(True))
+        self.up5 = UNetBlock(conv_channels[3] * 2, conv_channels[2], down=False, activation=nn.ReLU(True), dropout=True)
+        self.up6 = UNetBlock(conv_channels[2] * 2, conv_channels[1], down=False, activation=nn.ReLU(True))
         self.up7 = UNetBlock(conv_channels[1] * 2, conv_channels[0], down=False, activation=nn.ReLU(True))
 
         self.out = UNetBlock(conv_channels[0] * 2, in_channels, normalize=False, down=False, activation=nn.Tanh())

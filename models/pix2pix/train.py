@@ -57,7 +57,6 @@ def train_one_epoch(epoch, G, D, optim_G, optim_D, train_loader, gan_loss, dist_
     pbar = tqdm(train_loader)
     pbar.set_description(desc=f'Epoch {epoch + 1}/{config.epochs}')
 
-    # cifar-10是带标注的，所有加了个 _ 丢弃标注
     for i, (x, y) in enumerate(pbar):
         x, y = x.to(config.device), y.to(config.device)
 
@@ -79,8 +78,8 @@ def train_one_epoch(epoch, G, D, optim_G, optim_D, train_loader, gan_loss, dist_
 
         # 训练生成器
         d_fake = D(x, y_fake)
+        G_gan_loss = gan_loss(d_fake, fake)
         l1_loss = dist_loss(y_fake, y)
-        G_gan_loss = gan_loss(d_fake, torch.ones_like(d_fake))
         G_loss = G_gan_loss + config.l1_lambda * l1_loss
         G.zero_grad()
         G_loss.backward()
