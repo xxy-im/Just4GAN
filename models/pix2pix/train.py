@@ -19,7 +19,7 @@ def main():
     n_epochs = config.epochs
     weights_folder = config.ckpt_dir
 
-    G, D = UNetGenerator(), PatchDiscriminator()
+    G, D = UNetGenerator(init_weights=False), PatchDiscriminator(init_weights=False)
     G.to(config.device)
     D.to(config.device)
 
@@ -30,7 +30,7 @@ def main():
     l1_loss = torch.nn.L1Loss()
 
     train_transform = [
-        # transforms.Resize((256, 256)),
+        transforms.Resize((256, 256)),
         transforms.ToPILImage(),
         # transforms.ColorJitter(),
         transforms.ToTensor(),
@@ -63,7 +63,7 @@ def train_one_epoch(epoch, G, D, optim_G, optim_D, train_loader, gan_loss, dist_
 
         y_fake = G(x)   # 生成器生成假图
         d_real = D(x, y)    # 判别器对真图进行判别
-        d_fake = D(x, y_fake.detach())   # 判别器对假图进行判别
+        d_fake = D(x, y_fake)   # 判别器对假图进行判别
 
         real = torch.ones_like(d_real)    # 真图全1
         fake = torch.zeros_like(d_real)   # 假图全0
@@ -78,10 +78,11 @@ def train_one_epoch(epoch, G, D, optim_G, optim_D, train_loader, gan_loss, dist_
         optim_D.step()
 
         # 训练生成器
-        l1_loss = dist_loss(y_fake, y)
+        y_fake = G(x)
         d_fake = D(x, y_fake)
-        G_loss = gan_loss(d_fake, torch.ones_like(d_fake))
-        G_loss += config.l1_lambda * l1_loss
+        l1_loss = dist_loss(y_fake, y)
+        G_gan_loss = gan_loss(d_fake, torch.ones_like(d_fake))
+        G_loss = G_gan_loss + config.l1_lambda * l1_loss
         G.zero_grad()
         G_loss.backward()
         optim_G.step()

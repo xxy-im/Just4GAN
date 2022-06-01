@@ -26,7 +26,7 @@ class AnimeDataset(Dataset):
 
 if __name__ == "__main__":
     train_transform = [
-        # transforms.Resize((256, 256)),
+        transforms.Resize((256, 256)),
         transforms.ToPILImage(),
         # transforms.ColorJitter(),
         transforms.ToTensor(),
@@ -37,6 +37,7 @@ if __name__ == "__main__":
     dataset = AnimeDataset("../../data/Anime Sketch Colorization Pair/data/train", train_transform)
     loader = DataLoader(dataset, batch_size=5)
     for x, y in loader:
-        print(x.shape)
+        torchvision.utils.save_image(x, f"./x.png")
+        torchvision.utils.save_image(y, f"./y.png")
         break
 

@@ -15,7 +15,7 @@ class UNetBlock(nn.Module):
         )
 
         self.use_dropout = dropout
-        self.dropout = nn.Dropout(0.5, inplace=True)
+        self.dropout = nn.Dropout(0.5)
 
     def forward(self, x):
         x = self.cbr(x)
@@ -28,24 +28,24 @@ class UNetGenerator(nn.Module):
 
         conv_channels = [64, 128, 256, 512, 512, 512, 512, 512, 512]
 
-        self.down1 = UNetBlock(in_channels, conv_channels[0], down=True, activation=nn.ReLU(True))
-        self.down2 = UNetBlock(conv_channels[0], conv_channels[1], down=True, activation=nn.ReLU(True))
-        self.down3 = UNetBlock(conv_channels[1], conv_channels[2], down=True, activation=nn.ReLU(True))
-        self.down4 = UNetBlock(conv_channels[2], conv_channels[3], down=True, activation=nn.ReLU(True))
-        self.down5 = UNetBlock(conv_channels[3], conv_channels[4], down=True, activation=nn.ReLU(True))
-        self.down6 = UNetBlock(conv_channels[4], conv_channels[5], down=True, activation=nn.ReLU(True))
-        self.down7 = UNetBlock(conv_channels[5], conv_channels[6], down=True, activation=nn.ReLU(True))
+        self.down1 = UNetBlock(in_channels, conv_channels[0], down=True)
+        self.down2 = UNetBlock(conv_channels[0], conv_channels[1], down=True)
+        self.down3 = UNetBlock(conv_channels[1], conv_channels[2], down=True)
+        self.down4 = UNetBlock(conv_channels[2], conv_channels[3], down=True)
+        self.down5 = UNetBlock(conv_channels[3], conv_channels[4], down=True)
+        self.down6 = UNetBlock(conv_channels[4], conv_channels[5], down=True)
+        self.down7 = UNetBlock(conv_channels[5], conv_channels[6], down=True)
 
-        self.bottleneck = UNetBlock(conv_channels[6], conv_channels[7], down=True, activation=nn.ReLU(True))
+        self.bottleneck = UNetBlock(conv_channels[6], conv_channels[7], down=True)
 
-        self.up1 = UNetBlock(conv_channels[7], conv_channels[6], down=False)
-        self.up2 = UNetBlock(conv_channels[6] * 2, conv_channels[5], down=False)
-        self.up3 = UNetBlock(conv_channels[5] * 2, conv_channels[4], down=False)
-        self.up4 = UNetBlock(conv_channels[4] * 2, conv_channels[3], down=False)
-        self.up5 = UNetBlock(conv_channels[3] * 2, conv_channels[2], down=False)
-        self.up6 = UNetBlock(conv_channels[2] * 2, conv_channels[1], down=False)
-        self.up7 = UNetBlock(conv_channels[1] * 2, conv_channels[0], down=False)
-        self.out = UNetBlock(conv_channels[0] * 2, in_channels, down=False)
+        self.up1 = UNetBlock(conv_channels[7], conv_channels[6], down=False, activation=nn.ReLU(True))
+        self.up2 = UNetBlock(conv_channels[6] * 2, conv_channels[5], down=False, activation=nn.ReLU(True), dropout=True)
+        self.up3 = UNetBlock(conv_channels[5] * 2, conv_channels[4], down=False, activation=nn.ReLU(True))
+        self.up4 = UNetBlock(conv_channels[4] * 2, conv_channels[3], down=False, activation=nn.ReLU(True), dropout=True)
+        self.up5 = UNetBlock(conv_channels[3] * 2, conv_channels[2], down=False, activation=nn.ReLU(True))
+        self.up6 = UNetBlock(conv_channels[2] * 2, conv_channels[1], down=False, activation=nn.ReLU(True), dropout=True)
+        self.up7 = UNetBlock(conv_channels[1] * 2, conv_channels[0], down=False, activation=nn.ReLU(True))
+        self.out = UNetBlock(conv_channels[0] * 2, in_channels, down=False, activation=nn.Tanh())
 
         if init_weights:
             for m in self.modules():
@@ -84,22 +84,23 @@ class PatchDiscriminator(nn.Module):
 
         conv_channels = [64, 128, 256, 512]
 
-        def cbr_block(in_channel, out_channel, kernel_size=4, stride=2, padding=1, activation=None):
+        def cbr_block(in_channel, out_channel, normalize=True, kernel_size=4, stride=2, padding=1, activation=None):
             layers = [
                 nn.Conv2d(in_channel, out_channel, kernel_size=kernel_size, stride=stride, padding=padding, bias=False),
-                nn.InstanceNorm2d(out_channel),
-                nn.LeakyReLU(0.2, inplace=True) if activation is None else activation
             ]
+            if normalize:
+                layers.append(nn.BatchNorm2d(out_channel))
+            layers.append(nn.LeakyReLU(0.2, inplace=True) if activation is None else activation)
             return layers
 
         # 感受野计算公式为 (output_size - 1) * stride + ksize
         # 倒着往上推就能算出感受野为70，最后一个output_size按1算
         self.net = nn.Sequential(
-            *cbr_block(in_channels, conv_channels[0]),
+            *cbr_block(in_channels, conv_channels[0], normalize=False),
             *cbr_block(conv_channels[0], conv_channels[1]),
             *cbr_block(conv_channels[1], conv_channels[2]),
             *cbr_block(conv_channels[2], conv_channels[3], stride=1),
-            *cbr_block(conv_channels[3], 1, stride=1)
+            *cbr_block(conv_channels[3], 1, normalize=False, stride=1, activation=nn.Sigmoid())
         )
 
         if init_weights:
