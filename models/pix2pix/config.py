@@ -1,10 +1,10 @@
 import torch
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-train_dir = "../../data/Anime Sketch Colorization Pair/train"
-val_dir = "../../data/Anime Sketch Colorization Pair/val"
+train_dir = "../../data/Anime Sketch Colorization Pair/data/train"
+val_dir = "../../data/Anime Sketch Colorization Pair/data/val"
 
-batch_size = 128
+batch_size = 64
 num_workers = 4
 lr = 2e-4
 l1_lambda = 100

@@ -1,5 +1,6 @@
 import os
 import glob
+import config
 
 from torch.utils.data import Dataset, DataLoader
 
@@ -34,7 +35,7 @@ if __name__ == "__main__":
     ]
     train_transform = transforms.Compose(train_transform)
 
-    dataset = AnimeDataset("../../data/Anime Sketch Colorization Pair/data/train", train_transform)
+    dataset = AnimeDataset(config.train_dir, train_transform)
     loader = DataLoader(dataset, batch_size=5)
     for x, y in loader:
         torchvision.utils.save_image(x, f"./x.png")

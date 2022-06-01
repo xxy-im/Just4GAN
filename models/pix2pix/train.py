@@ -23,6 +23,7 @@ def main():
     G.to(config.device)
     D.to(config.device)
 
+    print(G)
     optim_G = torch.optim.Adam(G.parameters(), lr=config.lr, betas=(0.5, 0.999))
     optim_D = torch.optim.Adam(D.parameters(), lr=config.lr, betas=(0.5, 0.999))
 
@@ -39,7 +40,7 @@ def main():
     train_transform = transforms.Compose(train_transform)
 
     train_data = AnimeDataset(config.train_dir, train_transform)
-    train_loader = data.DataLoader(train_data, batch_size=config.batch_size, shuffle=True)
+    train_loader = data.DataLoader(train_data, batch_size=config.batch_size, shuffle=True, num_workers=config.num_workers)
 
     val_data = AnimeDataset(config.val_dir, train_transform)
     val_loader = data.DataLoader(val_data, batch_size=5)
@@ -63,7 +64,7 @@ def train_one_epoch(epoch, G, D, optim_G, optim_D, train_loader, gan_loss, dist_
 
         y_fake = G(x)   # 生成器生成假图
         d_real = D(x, y)    # 判别器对真图进行判别
-        d_fake = D(x, y_fake)   # 判别器对假图进行判别
+        d_fake = D(x, y_fake.detach())   # 判别器对假图进行判别
 
         real = torch.ones_like(d_real)    # 真图全1
         fake = torch.zeros_like(d_real)   # 假图全0
@@ -78,7 +79,6 @@ def train_one_epoch(epoch, G, D, optim_G, optim_D, train_loader, gan_loss, dist_
         optim_D.step()
 
         # 训练生成器
-        y_fake = G(x)
         d_fake = D(x, y_fake)
         l1_loss = dist_loss(y_fake, y)
         G_gan_loss = gan_loss(d_fake, torch.ones_like(d_fake))

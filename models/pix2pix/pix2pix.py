@@ -3,23 +3,24 @@ import torch.nn as nn
 
 
 class UNetBlock(nn.Module):
-    def __init__(self, in_channel, out_channel, down=True, activation=None, dropout=False):
+    def __init__(self, in_channel, out_channel, normalize=True, down=True, activation=None, dropout=False):
         super().__init__()
 
         # 参数 4, 2, 1，在下采样是宽高缩小两倍，上采样时扩大两倍
-        self.cbr = nn.Sequential(
-            nn.Conv2d(in_channel, out_channel, 4, 2, 1, bias=False) if down
-            else nn.ConvTranspose2d(in_channel, out_channel, 4, 2, 1, bias=False),
-            nn.BatchNorm2d(out_channel),
-            nn.LeakyReLU(0.2, True) if activation is None else activation
+        self.net = nn.Sequential(
+            nn.Conv2d(in_channel, out_channel, 4, 2, 1, bias=False if normalize else True) if down
+            else nn.ConvTranspose2d(in_channel, out_channel, 4, 2, 1, bias=False if normalize else True),
         )
+        if normalize:
+            self.net.append(nn.BatchNorm2d(out_channel))
 
-        self.use_dropout = dropout
-        self.dropout = nn.Dropout(0.5)
+        self.net.append(nn.LeakyReLU(0.2, True) if activation is None else activation)
+
+        if dropout:
+            self.net.append(nn.Dropout(0.5))
 
     def forward(self, x):
-        x = self.cbr(x)
-        return self.dropout(x) if self.use_dropout else x
+        return self.net(x)
 
 
 class UNetGenerator(nn.Module):
@@ -45,7 +46,8 @@ class UNetGenerator(nn.Module):
         self.up5 = UNetBlock(conv_channels[3] * 2, conv_channels[2], down=False, activation=nn.ReLU(True))
         self.up6 = UNetBlock(conv_channels[2] * 2, conv_channels[1], down=False, activation=nn.ReLU(True), dropout=True)
         self.up7 = UNetBlock(conv_channels[1] * 2, conv_channels[0], down=False, activation=nn.ReLU(True))
-        self.out = UNetBlock(conv_channels[0] * 2, in_channels, down=False, activation=nn.Tanh())
+
+        self.out = UNetBlock(conv_channels[0] * 2, in_channels, normalize=False, down=False, activation=nn.Tanh())
 
         if init_weights:
             for m in self.modules():
@@ -86,7 +88,13 @@ class PatchDiscriminator(nn.Module):
 
         def cbr_block(in_channel, out_channel, normalize=True, kernel_size=4, stride=2, padding=1, activation=None):
             layers = [
-                nn.Conv2d(in_channel, out_channel, kernel_size=kernel_size, stride=stride, padding=padding, bias=False),
+                nn.Conv2d(
+                    in_channel,
+                    out_channel,
+                    kernel_size=kernel_size,
+                    stride=stride,
+                    padding=padding,
+                    bias=False if normalize else True),
             ]
             if normalize:
                 layers.append(nn.BatchNorm2d(out_channel))
