@@ -19,11 +19,10 @@ def main():
     n_epochs = config.epochs
     weights_folder = config.ckpt_dir
 
-    G, D = UNetGenerator(init_weights=False), PatchDiscriminator(init_weights=False)
+    G, D = UNetGenerator(init_weights=True), PatchDiscriminator(init_weights=True)
     G.to(config.device)
     D.to(config.device)
 
-    print(G)
     optim_G = torch.optim.Adam(G.parameters(), lr=config.lr, betas=(0.5, 0.999))
     optim_D = torch.optim.Adam(D.parameters(), lr=config.lr, betas=(0.5, 0.999))
 

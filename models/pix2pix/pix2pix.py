@@ -37,7 +37,7 @@ class UNetGenerator(nn.Module):
         self.down6 = UNetBlock(conv_channels[4], conv_channels[5], down=True)
         self.down7 = UNetBlock(conv_channels[5], conv_channels[6], down=True)
 
-        self.bottleneck = UNetBlock(conv_channels[6], conv_channels[7], down=True)
+        self.bottleneck = UNetBlock(conv_channels[6], conv_channels[7], normalize=False, down=True)
 
         self.up1 = UNetBlock(conv_channels[7], conv_channels[6], down=False, activation=nn.ReLU(True))
         self.up2 = UNetBlock(conv_channels[6] * 2, conv_channels[5], down=False, activation=nn.ReLU(True), dropout=True)
