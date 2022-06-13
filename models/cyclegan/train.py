@@ -78,8 +78,8 @@ def main():
             fake_A = G_BA(real_B)
             fake_B = G_AB(real_A)
 
-            d_a_fake = D_A(fake_A)
-            d_b_fake = D_B(fake_B)
+            d_a_fake = D_A(fake_A.detach())
+            d_b_fake = D_B(fake_B.detach())
 
             real = torch.ones_like(d_a_fake)
             fake = torch.zeros_like(d_a_fake)

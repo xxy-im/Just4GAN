@@ -95,7 +95,7 @@ class ResidualGenerator(nn.Module):
 
 
 class PatchDiscriminator(nn.Module):
-    def __init__(self, in_channels=6, init_weights=True):
+    def __init__(self, in_channels=3, init_weights=True):
         super().__init__()
 
         conv_channels = [64, 128, 256, 512]
@@ -134,5 +134,5 @@ class PatchDiscriminator(nn.Module):
                     if m.bias is not None:
                         nn.init.constant_(m.bias, 0)
 
-    def forward(self, x, y):
-        return self.net(torch.cat((x, y), 1))
+    def forward(self, x):
+        return self.net(x)
