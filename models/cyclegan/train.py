@@ -84,7 +84,7 @@ def main():
             fake = torch.zeros_like(d_a_fake)
 
             loss_r_a = gan_loss(D_A(real_A), real)
-            loss_f_a = gan_loss(D_A(fake_A.detach()), fake)
+            loss_f_a = gan_loss(d_a_fake, fake)
             loss_d_a = (loss_r_a + loss_f_a) / 2
 
             optim_DA.zero_grad()
@@ -92,7 +92,7 @@ def main():
             optim_DA.step()
 
             loss_r_b = gan_loss(D_B(real_B), real)
-            loss_f_b = gan_loss(D_B(fake_B.detach()), fake)
+            loss_f_b = gan_loss(d_b_fake, fake)
             loss_d_b = (loss_r_b + loss_f_b) / 2
 
             optim_DB.zero_grad()
@@ -102,8 +102,8 @@ def main():
             loss_D = (loss_d_a + loss_d_b) / 2
 
             # gan loss
-            d_a_fake = D_A(fake_A)
-            d_b_fake = D_B(fake_B)
+            d_a_fake = D_A(fake_A.detach())
+            d_b_fake = D_B(fake_B.detach())
             loss_g_ab = gan_loss(d_b_fake, real)
             loss_g_ba = gan_loss(d_a_fake, real)
             loss_GAN = (loss_g_ab + loss_g_ba) / 2
