@@ -48,7 +48,6 @@ def main():
     l_identity = torch.nn.L1Loss()
 
     train_transform = [
-        transforms.ToPILImage(),
         # transforms.ColorJitter(),
         transforms.ToTensor(),
         transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
@@ -71,7 +70,7 @@ def main():
         D_A.train()
         D_B.train()
 
-        for i, images in enumerate(pbar):
+        for images in pbar:
             real_A = images['A'].to(config.device)
             real_B = images['B'].to(config.device)
 
@@ -103,6 +102,8 @@ def main():
             loss_D = (loss_d_a + loss_d_b) / 2
 
             # gan loss
+            d_a_fake = D_A(fake_A)
+            d_b_fake = D_B(fake_B)
             loss_g_ab = gan_loss(d_b_fake, real)
             loss_g_ba = gan_loss(d_a_fake, real)
             loss_GAN = (loss_g_ab + loss_g_ba) / 2

@@ -4,8 +4,8 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 data_dir = "../../data/vangogh2photo"
 
 res_nums = 9
-batch_size = 12
-num_workers = 0
+batch_size = 4
+num_workers = 4
 lr = 2e-4
 cyc_lambda = 10
 id_lambda = 5

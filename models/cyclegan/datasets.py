@@ -2,6 +2,7 @@ import os
 import glob
 import config
 
+from PIL import Image
 from torch.utils.data import Dataset, DataLoader
 
 import torchvision
@@ -23,22 +24,21 @@ class Paint2PhotoDataset(Dataset):
         i = idx % self.len_A
         j = idx % self.len_B
 
-        img_A = torchvision.io.read_image(self.files_A[i])
-        img_B = torchvision.io.read_image(self.files_B[j])
+        img_A = Image.open(self.files_A[i])
+        img_B = Image.open(self.files_B[j])
 
         return {"A": self.transform(img_A), "B": self.transform(img_B)}
 
 
 if __name__ == "__main__":
     train_transform = [
-        transforms.ToPILImage(),
         # transforms.ColorJitter(),
         transforms.ToTensor(),
         transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
     ]
     train_transform = transforms.Compose(train_transform)
 
-    dataset = Paint2PhotoDataset('../../data/vangogh2photo', train_transform)
+    dataset = Paint2PhotoDataset(config.data_dir, train_transform)
     loader = DataLoader(dataset, batch_size=5)
     for images in loader:
         torchvision.utils.save_image(images['A'], f"./x.png")
