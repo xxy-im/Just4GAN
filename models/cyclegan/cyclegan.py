@@ -76,7 +76,7 @@ class ResidualGenerator(nn.Module):
         # map to RGB
         blocks += [
             *build_cbr_block(conv_channels[4], conv_channels[5],
-                             kernel_size=7, stride=1, padding=3, activation=nn.Tanh())
+                             kernel_size=7, stride=1, padding=3, activation=nn.Tanh(), normalize=False)
         ]
 
         self.net = nn.Sequential(*blocks)

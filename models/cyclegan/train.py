@@ -77,22 +77,22 @@ def main():
             fake_A = G_BA(real_B)
             fake_B = G_AB(real_A)
 
-            d_a_fake = D_A(fake_A.detach())
-            d_b_fake = D_B(fake_B.detach())
+            d_a_real = D_A(real_A)
+            d_b_real = D_B(real_B)
 
-            real = torch.ones_like(d_a_fake)
-            fake = torch.zeros_like(d_a_fake)
+            real = torch.ones_like(d_a_real)
+            fake = torch.zeros_like(d_a_real)
 
-            loss_r_a = gan_loss(D_A(real_A), real)
-            loss_f_a = gan_loss(d_a_fake, fake)
+            loss_r_a = gan_loss(d_a_real, real)
+            loss_f_a = gan_loss(D_A(fake_A.detach()), fake)
             loss_d_a = (loss_r_a + loss_f_a) / 2
 
             optim_DA.zero_grad()
             loss_d_a.backward()
             optim_DA.step()
 
-            loss_r_b = gan_loss(D_B(real_B), real)
-            loss_f_b = gan_loss(d_b_fake, fake)
+            loss_r_b = gan_loss(d_b_real, real)
+            loss_f_b = gan_loss(D_B(fake_B.detach()), fake)
             loss_d_b = (loss_r_b + loss_f_b) / 2
 
             optim_DB.zero_grad()
@@ -102,8 +102,8 @@ def main():
             loss_D = (loss_d_a + loss_d_b) / 2
 
             # gan loss
-            d_a_fake = D_A(fake_A.detach())
-            d_b_fake = D_B(fake_B.detach())
+            d_a_fake = D_A(fake_A)
+            d_b_fake = D_B(fake_B)
             loss_g_ab = gan_loss(d_b_fake, real)
             loss_g_ba = gan_loss(d_a_fake, real)
             loss_GAN = (loss_g_ab + loss_g_ba) / 2
@@ -125,17 +125,20 @@ def main():
             loss_G.backward()
             optim_G.step()
 
-            lr_scheduler_G.step()
-            lr_scheduler_D_A.step()
-            lr_scheduler_D_B.step()
-
             pbar.set_postfix(
                 {'D Loss': '{:.5f}'.format(round(loss_D.item(), 4)),
                  'G Loss': '{:.5f}'.format(round(loss_G.item(), 4))})
 
-        # torch.save(G_AB.state_dict(), f'{weights_folder}/G_AB-checkpoint-{str(epoch).zfill(3)}epoch.pth')
-        # torch.save(G_BA.state_dict(), f'{weights_folder}/G_BA-checkpoint-{str(epoch).zfill(3)}epoch.pth')
+        if (epoch+1) % 10 == 0:
+            torch.save(G_AB.state_dict(), f'{weights_folder}/G_AB-checkpoint-{str(epoch).zfill(3)}epoch.pth')
+            torch.save(G_BA.state_dict(), f'{weights_folder}/G_BA-checkpoint-{str(epoch).zfill(3)}epoch.pth')
+
         test(G_AB, G_BA, val_loader, epoch)
+
+        lr_scheduler_G.step()
+        lr_scheduler_D_A.step()
+        lr_scheduler_D_B.step()
+
         # TODO: save里保存epoch信息
         # TODO: 增加tensorboard 或 wandb 配置
 
