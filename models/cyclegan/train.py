@@ -59,7 +59,7 @@ def main():
                                    num_workers=config.num_workers)
 
     val_data = Paint2PhotoDataset(config.data_dir, train_transform, mode='test')
-    val_loader = data.DataLoader(val_data, batch_size=5)
+    val_loader = data.DataLoader(val_data, batch_size=5, shuffle=True)
 
     for epoch in range(start_epoch, n_epochs):
         pbar = tqdm(train_loader)

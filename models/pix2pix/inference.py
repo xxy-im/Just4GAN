@@ -32,7 +32,6 @@ def main():
     transform = transforms.Compose(transform)
 
     with torch.no_grad():
-        print(x.shape)
         x = transform(x)
         x = x.view(-1, x.shape[0], x.shape[1], x.shape[2])
         x = x.to(config.device)

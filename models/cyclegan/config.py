@@ -15,4 +15,5 @@ decay_epoch = 100
 
 output_dir = "../../output"
 ckpt_dir = "../../weights"
-inference_ckpt = "../../weights/G-checkpoint-021epoch.pth"
+inference_ckpt_ab = "../../weights/G_AB-checkpoint-039epoch.pth"
+inference_ckpt_ba = "../../weights/G_BA-checkpoint-039epoch.pth"
